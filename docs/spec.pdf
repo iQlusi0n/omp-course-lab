@@ -1,0 +1,204 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Length 2996 >>
+stream
+BT
+54 732 Td
+13 TL
+/F2 16 Tf (omp-course-lab - Service Specification \(v1\)) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (This document describes the behaviour of the lab service as shipped on `main`.) Tj T*
+/F1 10 Tf (`docs/spec.pdf` is generated from this file by `tools/make_pdf.py` and is the) Tj T*
+/F1 10 Tf (fixture for the PDF-reading exercise; keep the two in sync by re-running the tool.) Tj T*
+/F1 10 Tf () Tj T*
+/F2 12 Tf (1. Overview) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (The lab is a deliberately small order-management backend:) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (- `api/` - a JSON HTTP service \(stdlib `http.server`\) on port 8080 that also) Tj T*
+/F1 10 Tf (  serves the static signup page from `web/`.) Tj T*
+/F1 10 Tf (- `cli/` - an argparse client that reads the same SQLite database directly.) Tj T*
+/F1 10 Tf (- `data/lab.sqlite` - the seeded database \(12 users, 72 orders, 8 months\).) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (Everything is Python 3 standard library. There is no dependency to install.) Tj T*
+/F1 10 Tf () Tj T*
+/F2 12 Tf (2. Data model) Tj T*
+/F1 10 Tf () Tj T*
+/F2 12 Tf (users) Tj T*
+/F1 10 Tf () Tj T*
+/F3 9 Tf (| column     | type    | notes                          |) Tj T*
+/F3 9 Tf (|------------|---------|--------------------------------|) Tj T*
+/F3 9 Tf (| id         | INTEGER | primary key                    |) Tj T*
+/F3 9 Tf (| name       | TEXT    | display name                   |) Tj T*
+/F3 9 Tf (| email      | TEXT    | unique, lower-case             |) Tj T*
+/F3 9 Tf (| created_at | TEXT    | ISO date `YYYY-MM-DD`          |) Tj T*
+/F1 10 Tf () Tj T*
+/F2 12 Tf (orders) Tj T*
+/F1 10 Tf () Tj T*
+/F3 9 Tf (| column      | type    | notes                                              |) Tj T*
+/F3 9 Tf (|-------------|---------|----------------------------------------------------|) Tj T*
+/F3 9 Tf (| id          | INTEGER | primary key                                        |) Tj T*
+/F3 9 Tf (| user_id     | INTEGER | references users.id                                |) Tj T*
+/F3 9 Tf (| created_at  | TEXT    | ISO date `YYYY-MM-DD`                              |) Tj T*
+/F3 9 Tf (| status      | TEXT    | one of `pending`, `shipped`, `completed`, `cancelled` |) Tj T*
+/F3 9 Tf (| total_cents | INTEGER | order total in cents \(never floating point\)        |) Tj T*
+/F1 10 Tf () Tj T*
+/F2 12 Tf (schema_version) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (Single row, `version = 1`. The constants derived from the schema live in) Tj T*
+/F1 10 Tf (`generated/schema_info.py`, which is written by `tools/seed_db.py` and must never) Tj T*
+/F1 10 Tf (be edited by hand.) Tj T*
+/F1 10 Tf () Tj T*
+/F2 12 Tf (3. HTTP API) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (All responses are JSON. Errors have the shape `{"error": "<message>"}`.) Tj T*
+/F1 10 Tf () Tj T*
+/F2 12 Tf (GET /health) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (Returns `{"status": "ok", "service": "...", "version": "1.0"}`.) Tj T*
+ET
+BT /F1 8 Tf 54 30 Td (omp-course-lab spec - page 1 of 3) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 2721 >>
+stream
+BT
+54 732 Td
+13 TL
+/F1 10 Tf () Tj T*
+/F2 12 Tf (GET /users/<id>) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (Returns the user record plus `order_count`, the number of the user's orders whose) Tj T*
+/F1 10 Tf (status is not `cancelled`.) Tj T*
+/F1 10 Tf () Tj T*
+/F3 9 Tf ({"id": 3, "name": "Linus Torvalds", "email": "linus@example.com",) Tj T*
+/F3 9 Tf ( "created_at": "2025-09-30", "order_count": 5}) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (`404` when the id does not exist.) Tj T*
+/F1 10 Tf () Tj T*
+/F2 12 Tf (GET /orders?month=YYYY-MM&page=N) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (Lists orders newest first, ten per page \(`page` defaults to 1\). `month` is) Tj T*
+/F1 10 Tf (optional; when present it must be `YYYY-MM` \(`400` otherwise\). The response) Tj T*
+/F1 10 Tf (carries `count`, the total number of matching orders across all pages, so that) Tj T*
+/F1 10 Tf (`ceil\(count / page_size\)` is the last page.) Tj T*
+/F1 10 Tf () Tj T*
+/F3 9 Tf ({"month": "2026-03", "page": 1, "page_size": 10, "count": 12,) Tj T*
+/F3 9 Tf ( "orders": [{"id": 56, "user_id": 9, "created_at": "2026-03-23",) Tj T*
+/F3 9 Tf (             "status": "pending", "total_cents": 338990}, ...]}) Tj T*
+/F1 10 Tf () Tj T*
+/F2 12 Tf (POST /signup) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (Body: `{"name": "...", "email": "..."}`. Creates a user and returns `201` with) Tj T*
+/F1 10 Tf (`{"id", "name", "email"}`. Intended behaviour for bad input:) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (- missing or malformed field -> `400`) Tj T*
+/F1 10 Tf (- duplicate email -> `409`) Tj T*
+/F1 10 Tf (- anything else \(database unavailable, bug\) -> `500`) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (The static page at `/` posts to this endpoint and shows the banner) Tj T*
+/F1 10 Tf ("Welcome aboard!" on success.) Tj T*
+/F1 10 Tf () Tj T*
+/F2 12 Tf (Static files) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (`GET /` serves `web/index.html`; other paths fall through to files under `web/`.) Tj T*
+/F1 10 Tf (Paths outside `web/` are rejected with `404`.) Tj T*
+/F1 10 Tf () Tj T*
+/F2 12 Tf (4. Command-line client) Tj T*
+/F1 10 Tf () Tj T*
+/F3 9 Tf (python -m cli users <id>               # one user + order count) Tj T*
+/F3 9 Tf (python -m cli orders [--month YYYY-MM] # order table, newest first) Tj T*
+/F3 9 Tf (python -m cli health                   # database summary) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (Money is always rendered from integer cents as `$12.34`. The CLI exits `0` on) Tj T*
+/F1 10 Tf (success, `1` for "not found", `2` for a `LabError` \(configuration problems\), and) Tj T*
+/F1 10 Tf (argparse's `2` for usage errors.) Tj T*
+/F1 10 Tf () Tj T*
+/F2 12 Tf (5. Configuration) Tj T*
+/F1 10 Tf () Tj T*
+ET
+BT /F1 8 Tf 54 30 Td (omp-course-lab spec - page 2 of 3) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 1598 >>
+stream
+BT
+54 732 Td
+13 TL
+/F3 9 Tf (| variable       | meaning                                   | default             |) Tj T*
+/F3 9 Tf (|----------------|-------------------------------------------|---------------------|) Tj T*
+/F3 9 Tf (| `DATABASE_URL` | path or `sqlite:///path` to the database  | `data/lab.sqlite`   |) Tj T*
+/F3 9 Tf (| `LAB_TOKEN`    | reserved for a future auth exercise       | unset               |) Tj T*
+/F3 9 Tf (| `LAB_ISSUE`    | enables the failing test for issue *N*    | unset               |) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (`.env.example` shows the expected shapes. The code never reads `.env` itself.) Tj T*
+/F1 10 Tf () Tj T*
+/F2 12 Tf (6. Testing) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (`python -m unittest discover -s tests` runs the whole suite in well under ten) Tj T*
+/F1 10 Tf (seconds. Tests copy the seeded database to a temporary file and point) Tj T*
+/F1 10 Tf (`DATABASE_URL` at the copy, so they never modify `data/lab.sqlite`.) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (Each seeded issue in `docs/ISSUES.md` has a test that is skipped unless) Tj T*
+/F1 10 Tf (`LAB_ISSUE=<n>` is set; those tests fail on `main` by design and pass once the) Tj T*
+/F1 10 Tf (issue is fixed.) Tj T*
+/F1 10 Tf () Tj T*
+/F2 12 Tf (7. Non-goals) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (- No authentication, no TLS, no rate limiting.) Tj T*
+/F1 10 Tf (- No ORM, no migrations framework \(v2 introduces a hand-written migration\).) Tj T*
+/F1 10 Tf (- The service is single-node and keeps no state outside SQLite.) Tj T*
+ET
+BT /F1 8 Tf 54 30 Td (omp-course-lab spec - page 3 of 3) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
+endobj
+11 0 obj
+<< /Type /Catalog /Pages 10 0 R >>
+endobj
+12 0 obj
+<< /Title (omp-course-lab service specification) /Producer (tools/make_pdf.py) >>
+endobj
+xref
+0 13
+0000000000 65535 f 
+0000000015 00000 n 
+0000000112 00000 n 
+0000000214 00000 n 
+0000000309 00000 n 
+0000003357 00000 n 
+0000003504 00000 n 
+0000006277 00000 n 
+0000006424 00000 n 
+0000008074 00000 n 
+0000008221 00000 n 
+0000008291 00000 n 
+0000008342 00000 n 
+trailer
+<< /Size 13 /Root 11 0 R /Info 12 0 R >>
+startxref
+8440
+%%EOF

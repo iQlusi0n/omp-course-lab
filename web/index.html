@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>omp-course-lab signup</title>
+  <style>
+    body { font: 16px/1.4 system-ui, sans-serif; max-width: 28rem; margin: 3rem auto; padding: 0 1rem; }
+    label { display: block; margin-top: 1rem; }
+    input { width: 100%; padding: .5rem; font: inherit; box-sizing: border-box; }
+    button { margin-top: 1.25rem; padding: .6rem 1.2rem; font: inherit; }
+    .banner { margin-top: 1.5rem; padding: .75rem 1rem; border-radius: .25rem; background: #e6f7e6; color: #14532d; }
+    .banner.error { background: #fde8e8; color: #7f1d1d; }
+  </style>
+</head>
+<body>
+  <h1>Sign up</h1>
+  <form id="signup-form" novalidate>
+    <label for="name">Name <input id="name" name="name" type="text" required></label>
+    <label for="email">Email <input id="email" name="email" type="email" required></label>
+    <button id="submit" type="submit">Sign up</button>
+  </form>
+  <div id="banner" class="banner" hidden></div>
+  <script src="/app.js"></script>
+</body>
+</html>

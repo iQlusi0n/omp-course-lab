@@ -1,0 +1,6 @@
+[project]
+name = "omp-course-lab"
+version = "1.0.0"
+description = "Practice repository for the Working with omp course (stdlib only)"
+requires-python = ">=3.10"
+dependencies = []
