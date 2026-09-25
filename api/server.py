@@ -15,7 +15,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from . import db
 
-SERVICE_NAME = "omp-course-lab api"
+SERVICE_NAME = "omp-course-lab API v1"
 VERSION = "1.0"
 WEB_ROOT = Path(__file__).resolve().parent.parent / "web"
 
