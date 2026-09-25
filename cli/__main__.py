@@ -14,7 +14,7 @@ from api import LabError
 
 from . import commands
 
-DESCRIPTION = "omp-course-lab command-line client"
+DESCRIPTION = "omp-course-lab orders CLI (conflict-lab branch)"
 
 
 def build_parser() -> argparse.ArgumentParser:
