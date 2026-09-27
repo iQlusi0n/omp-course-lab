@@ -50,6 +50,36 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(user["name"], "Web User")
 
+    def test_signup_stores_and_echoes_company(self):
+        status, body = self._srv.post(
+            "/signup", {"name": "Corp User", "email": "corp@example.com", "company": "ACME"}
+        )
+        self.assertEqual(status, 201)
+        self.assertEqual(body["company"], "ACME")
+        status, user = self._srv.get(f"/users/{body['id']}")
+        self.assertEqual(status, 200)
+        self.assertEqual(user["company"], "ACME")
+
+    def test_signup_without_company_is_null(self):
+        status, body = self._srv.post("/signup", {"name": "Solo", "email": "solo@example.com"})
+        self.assertEqual(status, 201)
+        self.assertIsNone(body["company"])
+        self.assertIsNone(self._srv.get(f"/users/{body['id']}")[1]["company"])
+
+    def test_signup_blank_company_is_null(self):
+        status, body = self._srv.post("/signup", {"name": "Blank", "email": "blank@example.com", "company": "  "})
+        self.assertEqual(status, 201)
+        self.assertIsNone(body["company"])
+
+    def test_static_form_has_company_field(self):
+        status, html = self._srv.get("/")
+        self.assertEqual(status, 200)
+        self.assertIn(b'id="company"', html)
+        self.assertLess(html.index(b'id="email"'), html.index(b'id="company"'))
+        self.assertLess(html.index(b'id="company"'), html.index(b'id="submit"'))
+        status, js = self._srv.get("/app.js")
+        self.assertIn(b"company", js)
+
     def test_signup_rejects_non_json(self):
         status, body = self._srv.post("/signup", ["not", "an", "object"])
         self.assertEqual(status, 400)

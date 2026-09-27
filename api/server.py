@@ -168,7 +168,12 @@ class LabHandler(BaseHTTPRequestHandler):
 
     def _signup(self) -> None:
         data = self._read_json()
-        user = db.create_user(data["name"], data["email"])
+        company = data.get("company")
+        if company is not None:
+            if not isinstance(company, str):
+                raise BadRequest("company must be a string")
+            company = company.strip() or None
+        user = db.create_user(data["name"], data["email"], company)
         self._send_json(201, user)
 
     def _static(self, path: str) -> None:

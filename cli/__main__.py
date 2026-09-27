@@ -11,6 +11,7 @@ import argparse
 import sys
 
 from api import LabError
+from generated.schema_info import STATUSES
 
 from . import commands
 
@@ -26,6 +27,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_orders = sub.add_parser("orders", help="list orders")
     p_orders.add_argument("--month", help="filter by month, YYYY-MM")
+    p_orders.add_argument("--status", choices=STATUSES, help="filter by order status")
 
     sub.add_parser("health", help="show database summary")
     return parser
@@ -37,7 +39,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "users":
             return commands.cmd_users(args.user_id)
         if args.command == "orders":
-            return commands.cmd_orders(args.month)
+            return commands.cmd_orders(args.month, args.status)
         if args.command == "health":
             return commands.cmd_health()
     except LabError as e:

@@ -15,6 +15,10 @@
       name: document.getElementById("name").value.trim(),
       email: document.getElementById("email").value.trim()
     };
+    var company = document.getElementById("company").value.trim();
+    if (company) {
+      payload.company = company;
+    }
     fetch("/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

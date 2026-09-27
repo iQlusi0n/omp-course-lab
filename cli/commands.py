@@ -24,9 +24,11 @@ def cmd_users(user_id: int) -> int:
     return 0
 
 
-def cmd_orders(month: str | None) -> int:
-    orders = db.list_orders(month=month)
+def cmd_orders(month: str | None, status: str | None = None) -> int:
+    orders = db.list_orders(month=month, status=status)
     label = month or "all months"
+    if status:
+        label = f"{label} ({status})"
     if not orders:
         print(f"no orders for {label}")
         return 0

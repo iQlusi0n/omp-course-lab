@@ -45,6 +45,33 @@ class CliTests(unittest.TestCase):
         result = run_cli("users")
         self.assertEqual(result.returncode, 2)
 
+    # ----- v2: orders --status --------------------------------------------
+
+    def test_orders_status_filter_combines_with_month(self):
+        result = run_cli("orders", "--month", "2026-03", "--status", "completed")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        lines = result.stdout.splitlines()
+        rows = [ln.split() for ln in lines[1:-1]]
+        self.assertTrue(rows, result.stdout)
+        self.assertTrue(all(r[1].startswith("2026-03") and r[3] == "completed" for r in rows), result.stdout)
+        self.assertIn(f"{len(rows)} orders for 2026-03 (completed), total $", lines[-1])
+
+    def test_orders_status_alone(self):
+        result = run_cli("orders", "--status", "cancelled")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        rows = [ln.split() for ln in result.stdout.splitlines()[1:-1]]
+        self.assertTrue(all(r[3] == "cancelled" for r in rows), result.stdout)
+
+    def test_orders_invalid_status_is_usage_error(self):
+        result = run_cli("orders", "--status", "bogus")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("invalid choice", result.stderr)
+
+    def test_orders_table_unchanged_without_status(self):
+        result = run_cli("orders", "--month", "2026-03")
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("12 orders for 2026-03, total $", result.stdout.splitlines()[-1])
+
 
 if __name__ == "__main__":
     unittest.main()

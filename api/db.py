@@ -120,14 +120,14 @@ def get_order(order_id: int) -> dict | None:
         return dict(row) if row else None
 
 
-def create_user(name: str, email: str) -> dict:
+def create_user(name: str, email: str, company: str | None = None) -> dict:
     """Insert a user. Raises sqlite3.IntegrityError on a duplicate email."""
     with connect() as conn:
         cur = conn.execute(
-            "INSERT INTO users (name, email, created_at) VALUES (?, ?, date('now'))",
-            (name, email),
+            "INSERT INTO users (name, email, created_at, company) VALUES (?, ?, date('now'), ?)",
+            (name, email, company),
         )
-        return {"id": cur.lastrowid, "name": name, "email": email}
+        return {"id": cur.lastrowid, "name": name, "email": email, "company": company}
 
 
 def orders_per_month() -> list[dict]:
