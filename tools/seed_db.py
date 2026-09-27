@@ -13,7 +13,7 @@ import sqlite3
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 STATUSES = ("pending", "shipped", "completed", "cancelled")
 STATUS_WEIGHTS = (10, 15, 65, 10)
 
@@ -40,7 +40,8 @@ CREATE TABLE users (
     id         INTEGER PRIMARY KEY,
     name       TEXT NOT NULL,
     email      TEXT NOT NULL UNIQUE,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    company    TEXT
 );
 CREATE TABLE orders (
     id          INTEGER PRIMARY KEY,
