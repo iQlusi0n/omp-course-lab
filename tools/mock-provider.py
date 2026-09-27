@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import time
 import uuid
@@ -54,6 +55,9 @@ class MockHandler(BaseHTTPRequestHandler):
                 if isinstance(content, list):  # multi-part content
                     content = " ".join(p.get("text", "") for p in content if isinstance(p, dict))
                 last_user = str(content)
+        # omp prepends a <system-reminder>…</system-reminder> block (date, cwd) to the
+        # user turn; strip it so the echo is deterministic for the course exercises.
+        last_user = re.sub(r"<system-reminder>.*?</system-reminder>", "", last_user, flags=re.S)
         snippet = last_user.strip().replace("\n", " ")[:80]
         return f"Hello from {self.model_id}. You said: {snippet}"
 
