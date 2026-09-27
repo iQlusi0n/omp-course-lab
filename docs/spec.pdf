@@ -10,12 +10,12 @@ endobj
 << /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>
 endobj
 4 0 obj
-<< /Length 2996 >>
+<< /Length 3246 >>
 stream
 BT
 54 732 Td
 13 TL
-/F2 16 Tf (omp-course-lab - Service Specification \(v1\)) Tj T*
+/F2 16 Tf (omp-course-lab - Service Specification \(v2\)) Tj T*
 /F1 10 Tf () Tj T*
 /F1 10 Tf (This document describes the behaviour of the lab service as shipped on `main`.) Tj T*
 /F1 10 Tf (`docs/spec.pdf` is generated from this file by `tools/make_pdf.py` and is the) Tj T*
@@ -42,6 +42,7 @@ BT
 /F3 9 Tf (| name       | TEXT    | display name                   |) Tj T*
 /F3 9 Tf (| email      | TEXT    | unique, lower-case             |) Tj T*
 /F3 9 Tf (| created_at | TEXT    | ISO date `YYYY-MM-DD`          |) Tj T*
+/F3 9 Tf (| company    | TEXT    | optional, nullable \(v2\)        |) Tj T*
 /F1 10 Tf () Tj T*
 /F2 12 Tf (orders) Tj T*
 /F1 10 Tf () Tj T*
@@ -55,17 +56,16 @@ BT
 /F1 10 Tf () Tj T*
 /F2 12 Tf (schema_version) Tj T*
 /F1 10 Tf () Tj T*
-/F1 10 Tf (Single row, `version = 1`. The constants derived from the schema live in) Tj T*
-/F1 10 Tf (`generated/schema_info.py`, which is written by `tools/seed_db.py` and must never) Tj T*
-/F1 10 Tf (be edited by hand.) Tj T*
+/F1 10 Tf (Single row, `version = 2`. Version 1 databases are upgraded in place by) Tj T*
+/F1 10 Tf (`python3 tools/migrate.py [--db PATH]`, which adds `users.company` and bumps the) Tj T*
+/F1 10 Tf (version; running it again prints `already at version 2` and changes nothing.) Tj T*
+/F1 10 Tf (Fresh databases from `tools/seed_db.py` are created at version 2. The constants) Tj T*
+/F1 10 Tf (derived from the schema live in `generated/schema_info.py`, which is written by) Tj T*
+/F1 10 Tf (`tools/seed_db.py` and must never be edited by hand.) Tj T*
 /F1 10 Tf () Tj T*
 /F2 12 Tf (3. HTTP API) Tj T*
 /F1 10 Tf () Tj T*
 /F1 10 Tf (All responses are JSON. Errors have the shape `{"error": "<message>"}`.) Tj T*
-/F1 10 Tf () Tj T*
-/F2 12 Tf (GET /health) Tj T*
-/F1 10 Tf () Tj T*
-/F1 10 Tf (Returns `{"status": "ok", "service": "...", "version": "1.0"}`.) Tj T*
 ET
 BT /F1 8 Tf 54 30 Td (omp-course-lab spec - page 1 of 3) Tj ET
 endstream
@@ -74,21 +74,36 @@ endobj
 << /Type /Page /Parent 10 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 4 0 R >>
 endobj
 6 0 obj
-<< /Length 2721 >>
+<< /Length 2940 >>
 stream
 BT
 54 732 Td
 13 TL
 /F1 10 Tf () Tj T*
+/F2 12 Tf (GET /health) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (Returns `{"status": "ok", "service": "...", "version": "1.0"}`.) Tj T*
+/F1 10 Tf () Tj T*
 /F2 12 Tf (GET /users/<id>) Tj T*
 /F1 10 Tf () Tj T*
-/F1 10 Tf (Returns the user record plus `order_count`, the number of the user's orders whose) Tj T*
-/F1 10 Tf (status is not `cancelled`.) Tj T*
+/F1 10 Tf (Returns the user record plus `company` \(`null` when unset\) and `order_count`,) Tj T*
+/F1 10 Tf (the number of the user's orders whose status is not `cancelled`.) Tj T*
 /F1 10 Tf () Tj T*
 /F3 9 Tf ({"id": 3, "name": "Linus Torvalds", "email": "linus@example.com",) Tj T*
-/F3 9 Tf ( "created_at": "2025-09-30", "order_count": 5}) Tj T*
+/F3 9 Tf ( "created_at": "2025-09-30", "company": null, "order_count": 5}) Tj T*
 /F1 10 Tf () Tj T*
 /F1 10 Tf (`404` when the id does not exist.) Tj T*
+/F1 10 Tf () Tj T*
+/F2 12 Tf (GET /users/<id>/orders?status=<status>) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (All of one user's orders, newest first, **without pagination**. Each order has) Tj T*
+/F1 10 Tf (the same shape as in `/orders`. `status` is optional; when present it must be) Tj T*
+/F1 10 Tf (one of the values in `generated.schema_info.STATUSES`, otherwise `400` with an) Tj T*
+/F1 10 Tf (error naming the valid values. `404` when the user does not exist.) Tj T*
+/F1 10 Tf () Tj T*
+/F3 9 Tf ({"user_id": 9, "count": 2,) Tj T*
+/F3 9 Tf ( "orders": [{"id": 61, "user_id": 9, "created_at": "2026-04-05",) Tj T*
+/F3 9 Tf (             "status": "cancelled", "total_cents": 20299}, ...]}) Tj T*
 /F1 10 Tf () Tj T*
 /F2 12 Tf (GET /orders?month=YYYY-MM&page=N) Tj T*
 /F1 10 Tf () Tj T*
@@ -103,33 +118,18 @@ BT
 /F1 10 Tf () Tj T*
 /F2 12 Tf (POST /signup) Tj T*
 /F1 10 Tf () Tj T*
-/F1 10 Tf (Body: `{"name": "...", "email": "..."}`. Creates a user and returns `201` with) Tj T*
-/F1 10 Tf (`{"id", "name", "email"}`. Intended behaviour for bad input:) Tj T*
+/F1 10 Tf (Body: `{"name": "...", "email": "...", "company": "..."}` \(`company` optional\).) Tj T*
+/F1 10 Tf (Creates a user and returns `201` with `{"id", "name", "email", "company"}`;) Tj T*
+/F1 10 Tf (`company` is `null` when omitted or blank. Intended behaviour for bad input:) Tj T*
 /F1 10 Tf () Tj T*
 /F1 10 Tf (- missing or malformed field -> `400`) Tj T*
 /F1 10 Tf (- duplicate email -> `409`) Tj T*
 /F1 10 Tf (- anything else \(database unavailable, bug\) -> `500`) Tj T*
 /F1 10 Tf () Tj T*
-/F1 10 Tf (The static page at `/` posts to this endpoint and shows the banner) Tj T*
-/F1 10 Tf ("Welcome aboard!" on success.) Tj T*
+/F1 10 Tf (The static page at `/` posts to this endpoint \(name, email and the optional) Tj T*
+/F1 10 Tf (company field\) and shows the banner "Welcome aboard!" on success.) Tj T*
 /F1 10 Tf () Tj T*
 /F2 12 Tf (Static files) Tj T*
-/F1 10 Tf () Tj T*
-/F1 10 Tf (`GET /` serves `web/index.html`; other paths fall through to files under `web/`.) Tj T*
-/F1 10 Tf (Paths outside `web/` are rejected with `404`.) Tj T*
-/F1 10 Tf () Tj T*
-/F2 12 Tf (4. Command-line client) Tj T*
-/F1 10 Tf () Tj T*
-/F3 9 Tf (python -m cli users <id>               # one user + order count) Tj T*
-/F3 9 Tf (python -m cli orders [--month YYYY-MM] # order table, newest first) Tj T*
-/F3 9 Tf (python -m cli health                   # database summary) Tj T*
-/F1 10 Tf () Tj T*
-/F1 10 Tf (Money is always rendered from integer cents as `$12.34`. The CLI exits `0` on) Tj T*
-/F1 10 Tf (success, `1` for "not found", `2` for a `LabError` \(configuration problems\), and) Tj T*
-/F1 10 Tf (argparse's `2` for usage errors.) Tj T*
-/F1 10 Tf () Tj T*
-/F2 12 Tf (5. Configuration) Tj T*
-/F1 10 Tf () Tj T*
 ET
 BT /F1 8 Tf 54 30 Td (omp-course-lab spec - page 2 of 3) Tj ET
 endstream
@@ -138,11 +138,31 @@ endobj
 << /Type /Page /Parent 10 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 6 0 R >>
 endobj
 8 0 obj
-<< /Length 1598 >>
+<< /Length 2750 >>
 stream
 BT
 54 732 Td
 13 TL
+/F1 10 Tf () Tj T*
+/F1 10 Tf (`GET /` serves `web/index.html`; other paths fall through to files under `web/`.) Tj T*
+/F1 10 Tf (Paths outside `web/` are rejected with `404`.) Tj T*
+/F1 10 Tf () Tj T*
+/F2 12 Tf (4. Command-line client) Tj T*
+/F1 10 Tf () Tj T*
+/F3 9 Tf (python -m cli users <id>                                  # one user + order count) Tj T*
+/F3 9 Tf (python -m cli orders [--month YYYY-MM] [--status STATUS]  # order table, newest first) Tj T*
+/F3 9 Tf (python -m cli health                                      # database summary) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (`--month` and `--status` combine with AND. `--status` accepts only the values in) Tj T*
+/F1 10 Tf (`generated.schema_info.STATUSES`; anything else is an argparse usage error) Tj T*
+/F1 10 Tf (\(exit `2`\).) Tj T*
+/F1 10 Tf () Tj T*
+/F1 10 Tf (Money is always rendered from integer cents as `$12.34`. The CLI exits `0` on) Tj T*
+/F1 10 Tf (success, `1` for "not found", `2` for a `LabError` \(configuration problems\), and) Tj T*
+/F1 10 Tf (argparse's `2` for usage errors.) Tj T*
+/F1 10 Tf () Tj T*
+/F2 12 Tf (5. Configuration) Tj T*
+/F1 10 Tf () Tj T*
 /F3 9 Tf (| variable       | meaning                                   | default             |) Tj T*
 /F3 9 Tf (|----------------|-------------------------------------------|---------------------|) Tj T*
 /F3 9 Tf (| `DATABASE_URL` | path or `sqlite:///path` to the database  | `data/lab.sqlite`   |) Tj T*
@@ -164,7 +184,7 @@ BT
 /F2 12 Tf (7. Non-goals) Tj T*
 /F1 10 Tf () Tj T*
 /F1 10 Tf (- No authentication, no TLS, no rate limiting.) Tj T*
-/F1 10 Tf (- No ORM, no migrations framework \(v2 introduces a hand-written migration\).) Tj T*
+/F1 10 Tf (- No ORM, no migrations framework: `tools/migrate.py` is the one hand-written migration.) Tj T*
 /F1 10 Tf (- The service is single-node and keeps no state outside SQLite.) Tj T*
 ET
 BT /F1 8 Tf 54 30 Td (omp-course-lab spec - page 3 of 3) Tj ET
@@ -189,16 +209,16 @@ xref
 0000000112 00000 n 
 0000000214 00000 n 
 0000000309 00000 n 
-0000003357 00000 n 
-0000003504 00000 n 
-0000006277 00000 n 
-0000006424 00000 n 
-0000008074 00000 n 
-0000008221 00000 n 
-0000008291 00000 n 
-0000008342 00000 n 
+0000003607 00000 n 
+0000003754 00000 n 
+0000006746 00000 n 
+0000006893 00000 n 
+0000009695 00000 n 
+0000009842 00000 n 
+0000009912 00000 n 
+0000009963 00000 n 
 trailer
 << /Size 13 /Root 11 0 R /Info 12 0 R >>
 startxref
-8440
+10061
 %%EOF

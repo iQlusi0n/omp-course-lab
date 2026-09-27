@@ -1,4 +1,4 @@
-# omp-course-lab — Service Specification (v1)
+# omp-course-lab — Service Specification (v2)
 
 This document describes the behaviour of the lab service as shipped on `main`.
 `docs/spec.pdf` is generated from this file by `tools/make_pdf.py` and is the
@@ -25,6 +25,7 @@ Everything is Python 3 standard library. There is no dependency to install.
 | name       | TEXT    | display name                   |
 | email      | TEXT    | unique, lower-case             |
 | created_at | TEXT    | ISO date `YYYY-MM-DD`          |
+| company    | TEXT    | optional, nullable (v2)        |
 
 ### orders
 
@@ -38,9 +39,12 @@ Everything is Python 3 standard library. There is no dependency to install.
 
 ### schema_version
 
-Single row, `version = 1`. The constants derived from the schema live in
-`generated/schema_info.py`, which is written by `tools/seed_db.py` and must never
-be edited by hand.
+Single row, `version = 2`. Version 1 databases are upgraded in place by
+`python3 tools/migrate.py [--db PATH]`, which adds `users.company` and bumps the
+version; running it again prints `already at version 2` and changes nothing.
+Fresh databases from `tools/seed_db.py` are created at version 2. The constants
+derived from the schema live in `generated/schema_info.py`, which is written by
+`tools/seed_db.py` and must never be edited by hand.
 
 ## 3. HTTP API
 
@@ -52,15 +56,28 @@ Returns `{"status": "ok", "service": "...", "version": "1.0"}`.
 
 ### GET /users/<id>
 
-Returns the user record plus `order_count`, the number of the user's orders whose
-status is not `cancelled`.
+Returns the user record plus `company` (`null` when unset) and `order_count`,
+the number of the user's orders whose status is not `cancelled`.
 
 ```
 {"id": 3, "name": "Linus Torvalds", "email": "linus@example.com",
- "created_at": "2025-09-30", "order_count": 5}
+ "created_at": "2025-09-30", "company": null, "order_count": 5}
 ```
 
 `404` when the id does not exist.
+
+### GET /users/<id>/orders?status=<status>
+
+All of one user's orders, newest first, **without pagination**. Each order has
+the same shape as in `/orders`. `status` is optional; when present it must be
+one of the values in `generated.schema_info.STATUSES`, otherwise `400` with an
+error naming the valid values. `404` when the user does not exist.
+
+```
+{"user_id": 9, "count": 2,
+ "orders": [{"id": 61, "user_id": 9, "created_at": "2026-04-05",
+             "status": "cancelled", "total_cents": 20299}, ...]}
+```
 
 ### GET /orders?month=YYYY-MM&page=N
 
@@ -77,15 +94,16 @@ carries `count`, the total number of matching orders across all pages, so that
 
 ### POST /signup
 
-Body: `{"name": "...", "email": "..."}`. Creates a user and returns `201` with
-`{"id", "name", "email"}`. Intended behaviour for bad input:
+Body: `{"name": "...", "email": "...", "company": "..."}` (`company` optional).
+Creates a user and returns `201` with `{"id", "name", "email", "company"}`;
+`company` is `null` when omitted or blank. Intended behaviour for bad input:
 
 - missing or malformed field → `400`
 - duplicate email → `409`
 - anything else (database unavailable, bug) → `500`
 
-The static page at `/` posts to this endpoint and shows the banner
-"Welcome aboard!" on success.
+The static page at `/` posts to this endpoint (name, email and the optional
+company field) and shows the banner "Welcome aboard!" on success.
 
 ### Static files
 
@@ -95,10 +113,14 @@ Paths outside `web/` are rejected with `404`.
 ## 4. Command-line client
 
 ```
-python -m cli users <id>               # one user + order count
-python -m cli orders [--month YYYY-MM] # order table, newest first
-python -m cli health                   # database summary
+python -m cli users <id>                                  # one user + order count
+python -m cli orders [--month YYYY-MM] [--status STATUS]  # order table, newest first
+python -m cli health                                      # database summary
 ```
+
+`--month` and `--status` combine with AND. `--status` accepts only the values in
+`generated.schema_info.STATUSES`; anything else is an argparse usage error
+(exit `2`).
 
 Money is always rendered from integer cents as `$12.34`. The CLI exits `0` on
 success, `1` for "not found", `2` for a `LabError` (configuration problems), and
@@ -127,5 +149,5 @@ issue is fixed.
 ## 7. Non-goals
 
 - No authentication, no TLS, no rate limiting.
-- No ORM, no migrations framework (v2 introduces a hand-written migration).
+- No ORM, no migrations framework: `tools/migrate.py` is the one hand-written migration.
 - The service is single-node and keeps no state outside SQLite.

@@ -7,7 +7,9 @@ library only — nothing to install.
 python3 -m api                        # JSON API + web form on http://127.0.0.1:8080
 python3 -m cli users 1                # CLI client (reads data/lab.sqlite directly)
 python3 -m cli orders --month 2026-03
+python3 -m cli orders --month 2026-03 --status completed   # v2: filters AND together
 python3 -m cli health
+python3 tools/migrate.py [--db PATH]  # v2: upgrade a v1 database (idempotent)
 python3 -m unittest discover -s tests # test suite (< 10 s)
 ```
 
@@ -18,11 +20,11 @@ point at another database (see `.env.example`).
 
 | path | what it is |
 |---|---|
-| `api/` | `http.server` JSON service: `GET /health`, `GET /users/<id>`, `GET /orders?month=&page=`, `POST /signup`; serves `web/` at `/`. `api/__init__.py` re-exports `get_user`. |
-| `cli/` | argparse client (`users`, `orders`, `health`); `cli/log.py` provides `logger` (stdout, message-only). |
-| `web/` | signup form (`#signup-form`, `#name`, `#email`, button "Sign up"); success banner `#banner` reads `Welcome aboard!`. |
+| `api/` | `http.server` JSON service: `GET /health`, `GET /users/<id>` (incl. `company`), `GET /users/<id>/orders?status=`, `GET /orders?month=&page=`, `POST /signup` (optional `company`); serves `web/` at `/`. `api/__init__.py` re-exports `get_user`. |
+| `cli/` | argparse client (`users`, `orders [--month] [--status]`, `health`); `cli/log.py` provides `logger` (stdout, message-only). |
+| `web/` | signup form (`#signup-form`, `#name`, `#email`, optional `#company`, button "Sign up"); success banner `#banner` reads `Welcome aboard!`. |
 | `generated/` | machine-written constants (`# GENERATED — do not edit`), refreshed by `tools/seed_db.py`. |
-| `data/lab.sqlite` | seeded DB: 12 users, 72 orders across 8 months (2025-10 … 2026-05); tables `users`, `orders`, `schema_version`. |
+| `data/lab.sqlite` | seeded DB (schema version 2): 12 users, 72 orders across 8 months (2025-10 … 2026-05); tables `users`, `orders`, `schema_version`. |
 | `docs/spec.md`, `docs/spec.pdf` | service spec; PDF built by `tools/make_pdf.py` (3 pages). |
 | `docs/ISSUES.md` | seeded issues #1–#8 with repro commands. |
 | `docs/V2-SPEC.md` | capstone feature set. |
@@ -61,6 +63,7 @@ LAB_ISSUE=1 python3 -m unittest tests.test_issues   # fails on main; passes once
 
 ```
 python3 tools/seed_db.py      # data/lab.sqlite + generated/
+python3 tools/migrate.py      # upgrade an existing v1 database to schema version 2
 python3 tools/make_pdf.py     # docs/spec.pdf from docs/spec.md
 python3 tools/make_bundle.py  # fixtures/bundle.zip
 ```
