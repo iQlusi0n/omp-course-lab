@@ -69,6 +69,43 @@ class ApiTests(unittest.TestCase):
     def test_static_blocks_traversal(self):
         self.assertEqual(self._srv.get("/../api/db.py")[0], 404)
 
+    # ----- v2: GET /users/<id>/orders and company -------------------------
+
+    def test_get_user_has_company_null_when_unset(self):
+        status, body = self._srv.get("/users/1")
+        self.assertEqual(status, 200)
+        self.assertIn("company", body)
+        self.assertIsNone(body["company"])
+
+    def test_user_orders_newest_first_unpaginated(self):
+        status, body = self._srv.get("/users/9/orders")
+        self.assertEqual(status, 200)
+        self.assertEqual(body["user_id"], 9)
+        self.assertEqual(body["count"], len(body["orders"]))
+        self.assertEqual(body["count"], 7)  # seed: user 9 has 7 orders incl. cancelled
+        self.assertNotIn("page", body)
+        self.assertTrue(all(o["user_id"] == 9 for o in body["orders"]))
+        dates = [o["created_at"] for o in body["orders"]]
+        self.assertEqual(dates, sorted(dates, reverse=True))
+        self.assertEqual(set(body["orders"][0]), {"id", "user_id", "created_at", "status", "total_cents"})
+
+    def test_user_orders_status_filter(self):
+        status, body = self._srv.get("/users/9/orders?status=cancelled")
+        self.assertEqual(status, 200)
+        self.assertEqual(body["count"], 2)
+        self.assertTrue(all(o["status"] == "cancelled" for o in body["orders"]))
+
+    def test_user_orders_unknown_status_400_names_valid_values(self):
+        status, body = self._srv.get("/users/9/orders?status=bogus")
+        self.assertEqual(status, 400)
+        for valid in ("pending", "shipped", "completed", "cancelled"):
+            self.assertIn(valid, body["error"])
+
+    def test_user_orders_missing_user_404(self):
+        status, body = self._srv.get("/users/9999/orders")
+        self.assertEqual(status, 404)
+        self.assertIn("error", body)
+
 
 if __name__ == "__main__":
     unittest.main()

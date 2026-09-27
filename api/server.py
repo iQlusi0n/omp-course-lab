@@ -20,6 +20,7 @@ VERSION = "1.0"
 WEB_ROOT = Path(__file__).resolve().parent.parent / "web"
 
 _USER_ROUTE = re.compile(r"^/users/(\d+)$")
+_USER_ORDERS_ROUTE = re.compile(r"^/users/(\d+)/orders$")
 
 
 class NotFound(Exception):
@@ -100,6 +101,11 @@ class LabHandler(BaseHTTPRequestHandler):
             self._get_user(int(m.group(1)))
             return
 
+        m = _USER_ORDERS_ROUTE.match(path)
+        if m:
+            self._user_orders(int(m.group(1)), params)
+            return
+
         if path == "/orders":
             self._list_orders(params)
             return
@@ -126,6 +132,15 @@ class LabHandler(BaseHTTPRequestHandler):
         # NOTE: order_count is computed inside get_user before any paging is
         # applied; if counts ever look stale, check the seed (tools/seed_db.py).
         self._send_json(200, user)
+
+    def _user_orders(self, user_id: int, params: dict) -> None:
+        status = params.get("status", [None])[0]
+        if status is not None and not db.valid_status(status):
+            raise BadRequest(f"unknown status {status!r}; valid values: {', '.join(db.STATUSES)}")
+        if db.get_user(user_id) is None:
+            raise NotFound(f"user {user_id} not found")
+        orders = db.list_orders(user_id=user_id, status=status)
+        self._send_json(200, {"user_id": user_id, "count": len(orders), "orders": orders})
 
     def _list_orders(self, params: dict) -> None:
         month = params.get("month", [None])[0]

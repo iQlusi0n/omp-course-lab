@@ -46,10 +46,10 @@ def connect() -> sqlite3.Connection:
 
 
 def get_user(user_id: int) -> dict | None:
-    """Return one user with their ``order_count`` (non-cancelled orders)."""
+    """Return one user (incl. ``company``) with their ``order_count`` (non-cancelled orders)."""
     with connect() as conn:
         row = conn.execute(
-            "SELECT id, name, email, created_at FROM users WHERE id = ?",
+            "SELECT id, name, email, created_at, company FROM users WHERE id = ?",
             (user_id,),
         ).fetchone()
         if row is None:
@@ -72,13 +72,27 @@ def list_orders(
     month: str | None = None,
     limit: int | None = None,
     offset: int = 0,
+    status: str | None = None,
+    user_id: int | None = None,
 ) -> list[dict]:
-    """Orders, newest first. ``month`` is ``YYYY-MM``. ``limit=None`` disables paging."""
+    """Orders, newest first. ``month`` is ``YYYY-MM``. ``limit=None`` disables paging.
+
+    ``status`` and ``user_id`` are optional filters; all filters combine with AND.
+    """
     sql = "SELECT id, user_id, created_at, status, total_cents FROM orders"
+    where: list[str] = []
     args: list = []
     if month:
-        sql += " WHERE substr(created_at, 1, 7) = ?"
+        where.append("substr(created_at, 1, 7) = ?")
         args.append(month)
+    if status:
+        where.append("status = ?")
+        args.append(status)
+    if user_id is not None:
+        where.append("user_id = ?")
+        args.append(user_id)
+    if where:
+        sql += " WHERE " + " AND ".join(where)
     sql += " ORDER BY created_at DESC, id DESC"
     if limit is not None:
         sql += " LIMIT ? OFFSET ?"
