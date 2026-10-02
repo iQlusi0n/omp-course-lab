@@ -1,0 +1,29 @@
+name: test
+
+on:
+  push:
+    branches: [main, conflict-lab, capstone-solution]
+  pull_request:
+
+jobs:
+  unittest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Suite is green without the issue gate
+        run: python3 -m unittest discover -s tests
+      - name: Every seeded issue still has a failing gated test on main
+        if: github.ref == 'refs/heads/main'
+        run: |
+          for n in 1 2 3 4 5 6 7 8; do
+            if LAB_ISSUE=$n python3 -m unittest tests.test_issues >/dev/null 2>&1; then
+              echo "issue #$n has no failing test — fixture was fixed accidentally"; exit 1
+            fi
+          git diff --exit-code -- docs/spec.pdf fixtures/bundle.zip
+      - name: Fixtures regenerate deterministically
+        run: |
+          python3 tools/make_pdf.py && python3 tools/make_bundle.py
+          git diff --exit-code -- docs/spec.pdf

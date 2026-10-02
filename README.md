@@ -1,6 +1,7 @@
 # omp-course-lab
 
-The practice repository for the *Working with omp* course. Python 3 standard
+The practice repository for the *Working with omp* course
+(`omp-course`, which includes this repo as a git submodule). Python 3 standard
 library only — nothing to install.
 
 ```
@@ -56,6 +57,8 @@ LAB_ISSUE=1 python3 -m unittest tests.test_issues   # fails on main; passes once
   `cli/__main__.py` (both sides changed the service/CLI description). Merge it
   from a scratch branch to practise conflict resolution:
   `git switch -c scratch main && git merge conflict-lab`.
+- Branch `capstone-solution` (instructor reference): the Module 15 v2 feature
+  set implemented on top of `module-15-start`; 65 tests green.
 
 ## Regenerating fixtures
 
